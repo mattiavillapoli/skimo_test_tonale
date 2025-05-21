@@ -1,0 +1,27 @@
+
+.main {
+    background-color: #ffffff;
+    color: #222222;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+h1, h2, h3, h4 {
+    color: #111111;
+    font-weight: 900;
+}
+.stMetricValue {
+    color: #000000 !important;
+    font-weight: 900;
+}
+a, button {
+    color: #222222 !important;
+    background-color: #f0f0f0 !important;
+    border-radius: 6px;
+}
+hr {
+    border-color: #cccccc;
+}
+.stDataFrame th {
+    background-color: #e0e0e0 !important;
+    color: #222222 !important;
+    font-weight: 900;
+}
