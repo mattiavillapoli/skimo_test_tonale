@@ -6,7 +6,7 @@ import utils__data_loader as dl
 
 st.set_page_config(page_title="Test Skimo – Tonale 2025", layout="wide")
 
-# --- STILE ---
+# --- STILE CSS PERSONALIZZATO ---
 st.markdown("""
     <style>
         .main { background-color: #ffffff; color: #222222; }
@@ -16,6 +16,12 @@ st.markdown("""
             padding: 10px;
             border-radius: 8px;
             text-align: center;
+        }
+        .segment-box {
+            background: #eeeeee;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -40,14 +46,62 @@ if dati:
 else:
     st.error("Dati generali non disponibili.")
 
+# --- SEGMENTI E PROFILO ALTIMETRICO ---
+st.markdown("---")
+st.subheader("⛰️ Segmenti e Profilo Altimetrico")
+df_seg = dl.carica_segmenti("data__sum up.xlsx")
+if not df_seg.empty:
+    col_left, col_right = st.columns([1, 3])
+
+    with col_left:
+        for nome, row in df_seg.iterrows():
+            st.markdown(f"""
+                <div class='segment-box'>
+                    <strong>📍 {nome}</strong><br>
+                    📏 {row['lunghezza (m)']:.1f} m<br>
+                    ⛰️ {row['dislivello (m)']:.1f} m<br>
+                    <div style='font-size: 22px; color: #b30000; font-weight: bold;'>{row['pendenza media (%)']:.1f}%</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+    with col_right:
+        distanza_cum = [0] + df_seg['lunghezza (m)'].cumsum().tolist()
+        dislivello_cum = [0] + df_seg['dislivello (m)'].cumsum().tolist()
+        colori = ['rgba(255,100,0,{})'.format(p/100) for p in df_seg['pendenza media (%)']] + ['rgba(255,100,0,1)']
+
+        fig = go.Figure()
+        for i in range(1, len(distanza_cum)):
+            fig.add_trace(go.Scatter(
+                x=distanza_cum[i-1:i+1],
+                y=dislivello_cum[i-1:i+1],
+                mode="lines",
+                line=dict(color=colori[i], width=5),
+                showlegend=False
+            ))
+
+        fig.update_layout(
+            title="Profilo Altimetrico",
+            xaxis_title="Distanza (m)",
+            yaxis_title="Dislivello (m)",
+            plot_bgcolor='white',
+            margin=dict(l=20, r=20, t=60, b=20),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+else:
+    st.warning("Segmenti non disponibili.")
+
 # --- SELEZIONE ATLETA ---
 st.markdown("---")
 st.subheader("🎽 Seleziona un atleta")
 atleti = dl.carica_atleti("data__atleti.xlsx")
-atleta = st.selectbox("Scegli atleta", atleti)
+if atleti:
+    atleta = st.selectbox("Scegli atleta", atleti)
+else:
+    st.error("⚠️ Nessun atleta disponibile in 'data__atleti.xlsx'")
+    st.stop()
 
-# --- SELEZIONE TECNICA ---
-tecnica = st.selectbox("Seleziona tecnica", ["Tecnica libera", "Tecnica alternata", "Tecnica doppia"])
+# --- TECNICA ---
+tecnica = st.selectbox("Tecnica", ["Tecnica libera", "Tecnica alternata", "Tecnica doppia"])
 
 # --- DATI ATLETA ---
 df, meta = dl.carica_dati_atleta(atleta, tecnica)
